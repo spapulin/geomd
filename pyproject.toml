@@ -1,0 +1,40 @@
+[project]
+name = "geomd"
+version = "0.1.0"
+description = "GeoMarkdown is a Markdown dialect for geodata. This package provides parsers and renderers that convert between GeoMarkdown and GeoJSON"
+readme = "README.md"
+authors = [
+    { name = "Sergei" }
+]
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "geojson>=3.3.0",
+    "mistune>=3.3.4",
+]
+
+[project.scripts]
+geomd = "geomd:main"
+
+[project.urls]
+Homepage = "https://github.com/spapulin/geomd"
+Repository = "https://github.com/spapulin/geomd"
+Issues = "https://github.com/spapulin/fetta/geomd"
+
+[build-system]
+requires = ["uv_build>=0.12.17,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+    "jupyterlab>=4.6.4",
+    "pytest>=8",
+    "ruff>=0.6",
+]
