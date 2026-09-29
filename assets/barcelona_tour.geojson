@@ -1,0 +1,46 @@
+{
+    "type": "FeatureCollection",
+    "title": "Barcelona Tour",
+    "features": [
+        {
+            "type": "Feature",
+            "title": "Park Güell",
+            "_metadata": {
+                "field_mapping": {
+                    "overview": "Overview",
+                    "address": "Address",
+                    "geometry": "On map"
+                },
+                "extra_fields": ["id", "author", "title"]
+            },
+            "geometry": {"type": "Point", "coordinates": [2.152777, 41.414444]},
+            "properties": {
+                "id": "1",
+                "author": "Adam Smith",
+                "overview": "Park Güell is a public park system composed of gardens and architectural elements located on Carmel Hill",
+                "address": "Carrer d'Olot, Barcelona, Spain",
+                "title": "Park Güell"
+            }
+        },
+        {
+            "type": "Feature",
+            "title": "Casa Batlló",
+            "_metadata": {
+                "field_mapping": {
+                    "overview": "Overview",
+                    "address": "Address",
+                    "geometry": "On map"
+                },
+                "extra_fields": ["id", "author", "title"]
+            },
+            "geometry": {"type": "Point", "coordinates": [2.16487, 41.391642]},
+            "properties": {
+                "id": "2",
+                "author": "Adam Smith",
+                "overview": "Casa Batlló is a renowned building on Passeig de Gràcia, remodeled by Antoni Gaudí between 1904 and 1906",
+                "address": "Passeig de Gràcia, 43, Barcelona, Spain",
+                "title": "Casa Batlló"
+            }
+        }
+    ]
+}
