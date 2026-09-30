@@ -73,7 +73,9 @@ class MarkdownParser:
             case "blank_line":
                 return None
             case _:
-                raise ValueError(f"unhandled token: {node_type}")
+                # raise ValueError(f"unhandled token: {node_type}")
+                logger.error(f"Unhandled token: {node_type}")
+                return None
 
     def _get_children(self, node: dict) -> list[Node]:
         return [
