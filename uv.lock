@@ -823,6 +823,7 @@ mcp = [
 [package.dev-dependencies]
 api = [
     { name = "fastapi" },
+    { name = "requests" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 dev = [
@@ -850,6 +851,7 @@ provides-extras = ["api", "mcp"]
 [package.metadata.requires-dev]
 api = [
     { name = "fastapi", specifier = ">=0.141.1" },
+    { name = "requests", specifier = ">=2.34.2" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.53.0" },
 ]
 dev = [
