@@ -7,11 +7,13 @@ from ..models import Node, List, Paragraph, GeometryBlock, HtmlBlock
 class GeoJsonRenderer(JsonRenderer):
     """Render document nodes to a GeoJSON FeatureCollection string."""
 
-    def render(self, nodes: list[Node]) -> str:
+    def render(self, nodes: list[Node], as_dict: bool = False) -> str | dict:
         json_dict = super()._render_json(nodes)
         formatted_dict = self._map_fields_and_add_extra_fields(json_dict)
         features, extra = self._build_features(formatted_dict)
         feature_collection = geojson.FeatureCollection(features=features, **extra)
+        if as_dict:
+            return feature_collection
         return geojson.dumps(feature_collection)
 
     def _build_features(

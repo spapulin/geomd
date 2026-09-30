@@ -7,7 +7,7 @@ from ..models import Node, Heading, Paragraph, List, CodeBlock, GeometryBlock, H
 class GeoMarkdownRenderer(MarkdownRenderer):
     """Render document nodes back to Markdown text."""
 
-    def render(self, nodes: list[Node]) -> str:
+    def render(self, nodes: list[Node], **kwargs) -> str:
         return self._to_markdown(nodes)
 
     def _to_markdown(self, nodes: list[Node]) -> str:

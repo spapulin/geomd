@@ -8,16 +8,18 @@ from ..constants import _METADATA_KEY, _FIELD_MAPPING, _EXTRA_FIELDS
 class JsonRenderer:
     """Render document nodes to a JSON string."""
 
-    def render(self, nodes: list[Node]) -> str:
-        return self._to_json(nodes)
+    def render(self, nodes: list[Node], as_dict: bool = False) -> str | dict:
+        return self._to_json(nodes, as_dict)
 
-    def _to_json(self, nodes: list[Node]) -> str:
+    def _to_json(self, nodes: list[Node], as_dict: bool) -> str | dict:
         """
         Render nodes, then apply field mapping and
         extra fields from metadata.
         """
         json_dict = self._render_json(nodes)
         formatted_json_dict = self._map_fields_and_add_extra_fields(json_dict)
+        if as_dict:
+            return formatted_json_dict
         return json.dumps(formatted_json_dict)
 
     def _map_fields_and_add_extra_fields(self, data: dict) -> dict:

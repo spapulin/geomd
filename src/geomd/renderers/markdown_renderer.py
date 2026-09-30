@@ -4,7 +4,7 @@ from geomd.models import Node, Heading, Paragraph, CodeBlock, Text, Link, Image,
 class MarkdownRenderer:
     """Render document nodes back to Markdown text."""
 
-    def render(self, nodes: list[Node]) -> str:
+    def render(self, nodes: list[Node], **kwargs) -> str:
         return self._to_markdown(nodes)
 
     def _to_markdown(self, nodes: list[Node]) -> str:
