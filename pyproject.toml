@@ -33,6 +33,7 @@ build-backend = "uv_build"
 
 [project.optional-dependencies]
 api = [
+    "requests>=2.34.2",
     "fastapi>=0.141.1",
     "uvicorn[standard]>=0.53.0"
 ]
