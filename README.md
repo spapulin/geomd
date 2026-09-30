@@ -50,6 +50,26 @@ geojson_str = gmd.convert(
 print(geojson_str)
 ````
 
+## Try it online
+
+The quickest way to see `geomd` in action is the hosted demo:
+
+**[https://geomd.onrender.com/?url=https://raw.githubusercontent.com/spapulin/geomd/refs/heads/main/assets/barcelona_tour.geojson&src=geojson&dst=html](https://geomd.onrender.com/?url=https://raw.githubusercontent.com/spapulin/geomd/refs/heads/main/assets/barcelona_tour.geojson&src=geojson&dst=html)**
+
+The service takes a GeoJSON file, reads it, and renders it back as HTML. The example above uses [`barcelona_tour.geojson`](https://raw.githubusercontent.com/spapulin/geomd/refs/heads/main/assets/barcelona_tour.geojson)
+
+The service accepts three query parameters:
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `url` | Public URL of the source file | `https://raw.githubusercontent.com/.../barcelona_tour.geojson` |
+| `src` | Source format | `geojson` |
+| `dst` | Target format | `html` |
+
+The demo server also exposes an interactive **Swagger UI** where you can explore and test the available endpoints directly from your browser:
+
+**[https://geomd.onrender.com/docs](https://geomd.onrender.com/docs)**
+
 ## Install
 
 ### As a library
