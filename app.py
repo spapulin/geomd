@@ -1,12 +1,10 @@
+import requests
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
-from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse, Response
-import requests
-
 import geomd as gmd
-from geomd.registry import SrcFormat, DstFormat
-
+from geomd.registry import DstFormat, SrcFormat
 
 app = FastAPI(
     title="geomd API",

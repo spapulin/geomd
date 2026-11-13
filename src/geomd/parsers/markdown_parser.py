@@ -1,12 +1,32 @@
+from __future__ import annotations
+
 import logging
 
 import mistune
 
-from geomd.models import Node, Heading, Paragraph, Text, CodeBlock, Link, Image, List, ListItem, HtmlBlock
+from geomd.models import (
+    CodeBlock,
+    Formatting,
+    Heading,
+    HtmlBlock,
+    Image,
+    Link,
+    List,
+    ListItem,
+    Node,
+    Paragraph,
+    Text,
+)
 
 logger = logging.getLogger(__name__)
 
 _md = mistune.create_markdown(renderer=None)
+
+#: Tokens with no dedicated node whose raw text is kept verbatim.  Dropping
+#: them would silently shorten a paragraph.
+_RAW_TOKENS = frozenset({"codespan", "inline_html"})
+
+_FORMATTING_MARKUP = {"strong": "**", "emphasis": "*", "strikethrough": "~~"}
 
 
 class MarkdownParser:
@@ -15,71 +35,102 @@ class MarkdownParser:
     def parse(self, text: str) -> list[Node]:
         ast, _ = _md.parse(text)
         nodes = []
-        for node in ast:
-            node = self._to_nodes(node)
+        for token in ast:
+            node = self._to_nodes(token)
             if node is not None:
                 nodes.append(node)
         return nodes
 
     def _to_nodes(self, node: dict) -> Node | None:
         node_type = node["type"]
+        attrs = node.get("attrs") or {}
+
         match node_type:
             case "heading":
-                return Heading(
-                    level=node["attrs"]["level"],
-                    children=self._get_children(node)
-                )
+                return Heading(level=attrs["level"], children=self._get_children(node))
             case "paragraph" | "block_text":
-                return Paragraph(
-                    children=self._get_children(node)
-                )
+                return Paragraph(children=self._get_children(node))
             case "text":
                 return Text(raw=node["raw"])
+            case "strong" | "emphasis" | "strikethrough":
+                return Formatting(
+                    markup=_FORMATTING_MARKUP[node_type],
+                    children=self._get_children(node),
+                )
+            case "softbreak":
+                return Text(raw="\n")
+            case "linebreak":
+                return Text(raw="  \n")
             case "block_code":
                 return CodeBlock(
-                    language=node.get("attrs", {}).get("info", ""),
-                    raw=node["raw"]
+                    language=attrs.get("info") or "",
+                    raw=(node.get("raw") or "").rstrip("\n"),
                 )
             case "link":
-                title = ""
-                children = node.get("children")
-                if children:
-                    title = children[0].get("raw")
-                return Link(
-                    url=node["attrs"]["url"],
-                    title=title,
-                )
+                return Link(url=attrs.get("url") or "", title=self._inline_text(node))
             case "image":
-                title = ""
-                children = node.get("children")
-                if children:
-                    title = children[0].get("raw")
                 return Image(
-                    url=node["attrs"]["url"],
-                    alt=node["attrs"].get("title") or "",
-                    title=title
+                    url=attrs.get("url") or "",
+                    alt=self._inline_text(node),
+                    title=attrs.get("title") or "",
                 )
             case "list":
                 return List(
-                    ordered=node["bullet"] != "-",
-                    children=self._get_children(node)
+                    ordered=bool(attrs.get("ordered", False)),
+                    start=_list_start(attrs),
+                    depth=int(attrs.get("depth", 0) or 0),
+                    children=self._get_children(node),
                 )
             case "list_item":
-                return ListItem(
-                    children=self._get_children(node)
-                )
+                return ListItem(children=self._get_children(node))
             case "block_html":
-                return HtmlBlock(raw=node.get("raw"))
+                return HtmlBlock(raw=(node.get("raw") or "").rstrip("\n"))
+            case "thematic_break":
+                return Paragraph(children=[Text(raw="---")])
+            case "block_quote":
+                # Keep the words; a quote has no node of its own.
+                return Paragraph(children=self._get_children(node))
             case "blank_line":
                 return None
             case _:
-                # raise ValueError(f"unhandled token: {node_type}")
-                logger.error(f"Unhandled token: {node_type}")
+                raw = node.get("raw")
+                if node_type in _RAW_TOKENS and raw is not None:
+                    return Text(raw=raw)
+                if raw:
+                    logger.warning("No node for token %r, keeping its raw text", node_type)
+                    return Text(raw=raw)
+                logger.warning("Dropping unsupported token %r", node_type)
                 return None
 
     def _get_children(self, node: dict) -> list[Node]:
-        return [
-            node := self._to_nodes(child)
-            for child in node.get("children") or []
-            if node is not None
-        ]
+        """Convert every child token, skipping the ones that carry no content.
+
+        The conversion must not run inside the comprehension's filter: the
+        filter is evaluated before the element expression, so it would test the
+        *previous* child and drop everything after an unhandled token.
+        """
+        children: list[Node] = []
+        for child in node.get("children") or []:
+            converted = self._to_nodes(child)
+            if converted is not None:
+                children.append(converted)
+        return children
+
+    def _inline_text(self, node: dict) -> str:
+        """Plain text of a token's descendants (link text, image alt text)."""
+        parts: list[str] = []
+        for child in node.get("children") or []:
+            raw = child.get("raw")
+            if raw:
+                parts.append(raw)
+            else:
+                parts.append(self._inline_text(child))
+        return "".join(parts)
+
+
+def _list_start(attrs: dict) -> int:
+    start = attrs.get("start")
+    try:
+        return int(start) if start is not None else 1
+    except (TypeError, ValueError):
+        return 1

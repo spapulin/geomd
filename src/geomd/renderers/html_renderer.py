@@ -1,13 +1,22 @@
-import uuid
-from json import JSONDecodeError
+from __future__ import annotations
 
-import mistune
+import logging
+import uuid
+
 import geojson
+import mistune
+
+from ..errors import InvalidGeometryError
+from ..geometry import loads_geometry
+
+logger = logging.getLogger(__name__)
+
 
 class GeoHTMLRenderer(mistune.HTMLRenderer):
+    """Markdown to HTML, drawing every ```geometry block on a Leaflet map."""
 
     HTML_TEMPLATE = """<!doctype html>
-        <html lang="ru">
+        <html lang="en">
         <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,20 +43,24 @@ class GeoHTMLRenderer(mistune.HTMLRenderer):
 
     def block_code(self, code, info=None):
 
-        language = info.strip() if info else ''
+        language = info.strip() if info else ""
         if language != "geometry":
             return super().block_code(code, info)
 
-        geojson_str = code.strip()
         try:
-            geojson_data = geojson.loads(geojson_str)
-        except JSONDecodeError as e:
+            geometry = loads_geometry(code)
+        except InvalidGeometryError as exc:
+            logger.warning("Drawing an invalid geometry block as plain code: %s", exc)
             return super().block_code(code, info)
 
-        safe_geojson_str = geojson.dumps(geojson_data)
+        if geometry is None:
+            # A null geometry has nothing to draw.
+            return super().block_code(code, info)
+
+        safe_geojson_str = _script_safe(geometry)
 
         # Unique id for each map on one page
-        map_id = f'geo-map-{uuid.uuid4()}'
+        map_id = f"geo-map-{uuid.uuid4().hex}"
 
         return f'''
             <div id="{map_id}" class="geo-map" style="height:400px;width:100%"></div>
@@ -76,3 +89,12 @@ class GeoHTMLRenderer(mistune.HTMLRenderer):
             }})();
             </script>  
         '''
+
+
+def _script_safe(geometry) -> str:
+    """Serialise a geometry for a ``<script>`` body.
+
+    ``<`` is escaped so a string in the geometry cannot close the script
+    element, which would make a malformed block run as page JavaScript.
+    """
+    return geojson.dumps(geometry).replace("<", "\\u003c")
