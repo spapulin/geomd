@@ -1,6 +1,6 @@
 [project]
 name = "geomd"
-version = "0.1.0"
+version = "0.2.0"
 description = "GeoMarkdown is a Markdown dialect for geodata. This package provides parsers and renderers that convert between GeoMarkdown and GeoJSON"
 readme = "README.md"
 authors = [
@@ -12,6 +12,8 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
 ]
 requires-python = ">=3.12"
 dependencies = [
@@ -25,7 +27,7 @@ geomd = "geomd:main"
 [project.urls]
 Homepage = "https://github.com/spapulin/geomd"
 Repository = "https://github.com/spapulin/geomd"
-Issues = "https://github.com/spapulin/fetta/geomd"
+Issues = "https://github.com/spapulin/geomd/issues"
 
 [build-system]
 requires = ["uv_build>=0.12.17,<0.13.0"]
@@ -38,6 +40,10 @@ api = [
     "uvicorn[standard]>=0.53.0"
 ]
 mcp = ["fastmcp>=4.0.10"]
+test = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
 
 [dependency-groups]
 dev = [
@@ -53,3 +59,26 @@ api = [
     "uvicorn[standard]>=0.53.0"
 ]
 mcp = ["fastmcp>=4.0.10"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+# Notebook cell imports are managed by the notebook editor.
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+    "E501",  # the line length limit is advisory in this project
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+# FastAPI reads the query parameters from the default values.
+"app.py" = ["B008"]

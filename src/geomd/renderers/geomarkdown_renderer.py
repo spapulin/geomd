@@ -1,33 +1,28 @@
+from __future__ import annotations
+
 import geojson
 
-from .markdown_renderer import MarkdownRenderer
-from ..models import Node, Heading, Paragraph, List, CodeBlock, GeometryBlock, HtmlBlock
+from ..errors import InvalidGeometryError
+from ..models import GeometryBlock, Node
+from .markdown_renderer import MarkdownRenderer, _fenced
 
 
 class GeoMarkdownRenderer(MarkdownRenderer):
-    """Render document nodes back to Markdown text."""
+    """Render document nodes to GeoMarkdown text."""
 
-    def render(self, nodes: list[Node], **kwargs) -> str:
-        return self._to_markdown(nodes)
+    def _render_block(self, node: Node) -> str:
+        if isinstance(node, GeometryBlock):
+            return _fenced("geometry", self._geometry_body(node))
+        return super()._render_block(node)
 
-    def _to_markdown(self, nodes: list[Node]) -> str:
-        """Convert each block node to its Markdown form, joined by blank lines."""
-
-        blocks: list[str] = []
-        for node in nodes:
-            if isinstance(node, Heading):
-                blocks.append("#" * node.level + " " + self._render_inline(node.children))
-            elif isinstance(node, Paragraph):
-                blocks.append(self._render_inline(node.children))
-            elif isinstance(node, List):
-                blocks.append(self._render_list(node.children, ordered=node.ordered))
-            elif isinstance(node, CodeBlock):
-                language = node.language or ""
-                blocks.append(f"```{language}\n{node.raw}\n```")
-            elif isinstance(node, HtmlBlock):
-                blocks.append(f"{node.raw}")
-            elif isinstance(node, GeometryBlock):
-                blocks.append(f"```geometry\n{geojson.dumps(node.geometry)}\n```")
-            else:
-                raise ValueError(f"No such block node: {node.NODE_TYPE}")
-        return "\n\n".join(blocks) + "\n"
+    @staticmethod
+    def _geometry_body(node: GeometryBlock) -> str:
+        if node.error:
+            # Keep a block that could not be read exactly as it was written.
+            return node.raw
+        if node.geometry is None:
+            return "null"
+        try:
+            return geojson.dumps(node.geometry)
+        except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+            raise InvalidGeometryError(f"cannot serialise the geometry ({exc})") from exc

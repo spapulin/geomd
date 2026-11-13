@@ -1,13 +1,27 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import ClassVar
 
 import geojson
 
 
+def geometry_to_dict(geometry: object) -> dict | None:
+    """Return a plain dict for a GeoJSON object, or ``None`` for a null geometry."""
+    if geometry is None:
+        return None
+    interface = getattr(geometry, "__geo_interface__", None)
+    if interface is not None:
+        return dict(interface)
+    if isinstance(geometry, dict):
+        return geometry
+    raise TypeError(f"not a GeoJSON geometry: {geometry!r}")
+
+
 @dataclass
 class Node:
 
-    children: list["Node"] = field(default_factory=list)
+    children: list[Node] = field(default_factory=list)
 
     NODE_TYPE: ClassVar[str] = ""
 
@@ -55,6 +69,18 @@ class Image(Node):
 
 
 @dataclass
+class Formatting(Node):
+    """Inline emphasis, strong emphasis or strikethrough.
+
+    ``markup`` keeps the source markers (``*``, ``**``, ``~~``) so a Markdown
+    round trip can put them back; text-only renderers drop them.
+    """
+
+    NODE_TYPE = "formatting"
+    markup: str = ""
+
+
+@dataclass
 class CodeBlock(Node):
     NODE_TYPE = "code_block"
     raw: str = ""
@@ -66,6 +92,7 @@ class List(Node):
     NODE_TYPE = "list"
     ordered: bool = False
     start: int = 1
+    depth: int = 0
 
 
 @dataclass
@@ -81,21 +108,26 @@ class HtmlBlock(Node):
 
 @dataclass
 class GeometryBlock(Node):
+    """A ``geometry`` fenced block.
+
+    ``raw`` keeps the original body so a document with a broken block can be
+    written back unchanged instead of being silently replaced by ``null``;
+    ``error`` records why the body could not be read as GeoJSON.
+    """
+
     NODE_TYPE = "geometry_block"
     geometry: geojson.GeoJSON | None = None
+    raw: str = ""
+    error: str | None = None
 
+    @property
+    def is_valid(self) -> bool:
+        return self.error is None
 
-# def from_dict(d: dict) -> Node:
-#
-#     node_type: str = d["type"]
-#     children = [from_dict(c) for c in d.get("children", [])]
-#     attrs = {attr: v for attr, v in d.items() if attr not in ("type", "children")}
-#
-#     if node_type == Heading.NODE_TYPE:
-#         return Heading(children=children, **attrs)
-#     elif node_type == Paragraph.NODE_TYPE:
-#         return Paragraph(children=children)
-#     elif node_type == Text.NODE_TYPE:
-#         return Text(children=children, **attrs)
-#     else:
-#         raise ValueError(f"unknown node type: {node_type}")
+    def to_dict(self) -> dict:
+        result: dict = {"type": self.NODE_TYPE, "geometry": geometry_to_dict(self.geometry)}
+        if self.raw:
+            result["raw"] = self.raw
+        if self.error:
+            result["error"] = self.error
+        return result

@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
+
 import geomd as gmd
-from geomd.registry import SrcFormat, DstFormat
+from geomd.registry import DstFormat, SrcFormat
 
 mcp = FastMCP("geomd-mcp")
 

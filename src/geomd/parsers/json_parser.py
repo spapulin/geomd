@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import json
 import logging
 
-from geomd.models import Node, Heading, Text, Paragraph, Image, Link, ListItem, List
-
+from geomd.errors import InvalidDocumentError
+from geomd.models import Heading, Image, Link, List, ListItem, Node, Paragraph, Text
 
 logger = logging.getLogger(__name__)
 
@@ -11,14 +13,23 @@ class JsonParser:
     """Convert a JSON document into a flat list of document nodes."""
 
     def parse(self, text: str) -> list[Node]:
-        data = json.loads(text)
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise InvalidDocumentError(
+                f"the input is not valid JSON ({exc.msg} at line {exc.lineno}, column {exc.colno})"
+            ) from exc
+        if not isinstance(data, dict):
+            raise InvalidDocumentError(
+                f"the top level of a JSON document must be an object, got {type(data).__name__}"
+            )
         return self._to_nodes(data)
 
     def _to_nodes(self, data: dict, level: int = 1) -> list[Node]:
         nodes: list[Node] = []
         for key, value in data.items():
 
-            nodes.append(Heading(level=level, children=[Text(raw=key)]))
+            nodes.append(Heading(level=level, children=[Text(raw=str(key))]))
 
             if isinstance(value, dict):
                 nodes.extend(self._to_nodes(value, level + 1))
@@ -26,7 +37,7 @@ class JsonParser:
             elif isinstance(value, list):
                 nodes.append(self._to_list_node(value))
             else:
-                nodes.append(Paragraph(children=[Text(raw=str(value))]))
+                nodes.append(Paragraph(children=[Text(raw="" if value is None else str(value))]))
 
         return nodes
 
@@ -36,7 +47,7 @@ class JsonParser:
             node = self._to_resource_node(item)
             if node is not None:
                 list_nodes.append(ListItem(children=[node]))
-        return List(children=list_nodes)
+        return List(children=list(list_nodes))
 
     def _to_resource_node(self, item: str | dict) -> Node | None:
         if not isinstance(item, dict):
@@ -50,7 +61,6 @@ class JsonParser:
 
         if "alt" in item:
             alt = item["alt"]
-            return Image(url=url, title=title, alt=alt)
+            return Image(url=url or "", title=title or "", alt=str(alt or ""))
 
-        return Link(url=url, title=title)
-
+        return Link(url=url or "", title=title or "")
