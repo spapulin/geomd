@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 import geojson
 
-from ..constants import _EXTRA_FIELDS, _FIELD_MAPPING, _METADATA_KEY
+from ..constants import _EXTRA_FIELDS, _FIELD_MAPPING
 from ..helpers import parse_metadata_from_html_comment
 from ..models import (
     CodeBlock,
@@ -212,5 +212,3 @@ def _inline_text(nodes: list[Node]) -> str:
             parts.append(_inline_text(node.children))
     return "".join(parts)
 
-
-__all__ = ["GeoJsonRenderer", "_Section", "_METADATA_KEY"]
