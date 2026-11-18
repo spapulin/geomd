@@ -78,8 +78,9 @@ class MarkdownParser:
                 return None
 
     def _get_children(self, node: dict) -> list[Node]:
-        return [
-            node := self._to_nodes(child)
-            for child in node.get("children") or []
-            if node is not None
-        ]
+        children = []
+        for child in node.get("children") or []:
+            node = self._to_nodes(child)
+            if node is not None:
+                children.append(node)
+        return children
