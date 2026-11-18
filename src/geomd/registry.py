@@ -7,7 +7,7 @@ from .parsers.geojson_parser import GeoJsonParser
 from .parsers.geomarkdown_parser import GeoMarkdownParser
 from .protocol import Parser, Renderer
 from .renderers.geomarkdown_renderer import GeoMarkdownRenderer
-from .renderers.html_renderer import GeoHTMLRenderer
+from .renderers.html_renderer import GeoHTMLRenderer, ContentsInjectorPlugin
 from .renderers.json_renderer import JsonRenderer
 from .renderers.markdown_renderer import MarkdownRenderer
 from .renderers.geojson_renderer import GeoJsonRenderer
@@ -43,7 +43,10 @@ def convert(
         text: str,
         src: SrcFormat,
         dst: DstFormat,
-        as_dict: bool = False
+        *,
+        as_dict: bool = False,
+        auto_contents: bool = False,
+        contents_title: str = "Contents"
 ) -> str | dict:
     """
     Convert text from `src` format to `dst` format.
@@ -54,12 +57,26 @@ def convert(
     """
 
     if dst == "html":
-        markdown = create_markdown(renderer=GeoHTMLRenderer())
         if src in {"md", "geomd"}:
-            return markdown(text)
-        md_str = render(parse(text, src), "geomd")
-        return markdown(md_str)
-    return render(parse(text, src), dst, as_dict=as_dict)
+            plugins = [ContentsInjectorPlugin()] if auto_contents else None
+            md_str = text
+        else:
+            plugins = [ContentsInjectorPlugin(only_heading_ids=True)] if auto_contents else None
+            md_str = render(
+                parse(text, src),
+                fmt="geomd",
+                auto_contents=auto_contents,
+                contents_title=contents_title
+            )
+        return create_markdown(renderer=GeoHTMLRenderer(), plugins=plugins)(md_str)
+
+    return render(
+        parse(text, src),
+        dst,
+        as_dict=as_dict,
+        auto_contents=auto_contents,
+        contents_title=contents_title
+    )
 
 
 def parse(text: str, fmt: SrcFormat) -> list[Node]:
@@ -69,6 +86,14 @@ def parse(text: str, fmt: SrcFormat) -> list[Node]:
 def render(
         nodes: list[Node],
         fmt: DstFormat,
-        as_dict: bool = False
+        *,
+        as_dict: bool = False,
+        auto_contents: bool = False,
+        contents_title: str = "Contents"
 ) -> str:
-    return RENDERERS[fmt].render(nodes, as_dict=as_dict)
+    return RENDERERS[fmt].render(
+        nodes,
+        as_dict=as_dict,
+        auto_contents=auto_contents,
+        contents_title=contents_title
+    )

@@ -8,7 +8,18 @@ from ..constants import _METADATA_KEY, _FIELD_MAPPING, _EXTRA_FIELDS
 class JsonRenderer:
     """Render document nodes to a JSON string."""
 
-    def render(self, nodes: list[Node], as_dict: bool = False) -> str | dict:
+    def render(
+            self,
+            nodes: list[Node],
+            *,
+            as_dict: bool,
+            auto_contents: bool,
+            contents_title: str
+    ) -> str | dict:
+        if auto_contents:
+            raise NotImplementedError(
+                f"{type(self).__name__} does not support auto_contents=True"
+            )
         return self._to_json(nodes, as_dict)
 
     def _to_json(self, nodes: list[Node], as_dict: bool) -> str | dict:
