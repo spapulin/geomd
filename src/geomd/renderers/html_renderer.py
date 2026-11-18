@@ -1,6 +1,7 @@
 import uuid
 from json import JSONDecodeError
 from typing import Any, Iterable
+from xml.etree import ElementTree
 
 from mistune import HTMLRenderer, Markdown, BlockState
 import geojson
@@ -18,6 +19,9 @@ class GeoHTMLRenderer(HTMLRenderer):
     <style>
         body {{ margin: 0; font-family: system-ui, sans-serif; }}
         .md-content {{ max-width: 800px; margin: 0 auto; padding: 16px; overflow-wrap: anywhere; }}
+        ul.image-list {{ display: inline-flex; flex-wrap: wrap; list-style: none; padding: 0; margin: 0; gap: 10px; }}
+        ul.image-list li {{ list-style: none; }}
+        ul.image-list img {{ height: 100px; width: auto; display: block; }}
     </style>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -30,6 +34,31 @@ class GeoHTMLRenderer(HTMLRenderer):
     def __call__(self, tokens, state):
         body = super().__call__(tokens, state)
         return self.HTML_TEMPLATE.format(body=body)
+
+    def list(self, text: str, ordered: bool, **attrs: Any) -> str:
+        # TODO: Create ImageList document node instead
+        root = ElementTree.fromstring(f'<ul class="image-list">{text.strip()}</ul>')
+        items = root.findall("li")
+        if items:
+            for li in items:
+                img = li.find("img")
+                if img is None:
+                    break
+                link = ElementTree.Element(
+                    "a",
+                    attrib={
+                        "href": img.get("src", ""),
+                        "target": "_blank",
+                        "rel": "noopener noreferrer",
+                    }
+                )
+                li.remove(img)
+                link.append(img)
+                li.append(link)
+            else:
+                return ElementTree.tostring(root, encoding="unicode")
+
+        return super().list(text, ordered, **attrs)
 
     def block_html(self, html: str):
         if not html.startswith("<!--"):
