@@ -1,5 +1,8 @@
 .PHONY: test smoke lint fmt jupyter api mcp mcp-inspector
 
+test:
+	uv run pytest -v
+
 # JupyterLab on 127.0.0.1:8888, no browser auto-open. Loopback only
 jupyter:
 	uv run jupyter lab \
