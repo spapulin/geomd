@@ -9,7 +9,7 @@ jupyter:
 
 # Run the FastAPI app locally with auto-reload on 127.0.0.1:8000
 api:
-	uv run uvicorn app:app --host 127.0.0.1 --port 8000 --reload
+	uv run --extra api uvicorn app:app --host 127.0.0.1 --port 8000 --reload
 
 # Run the MCP server over HTTP on 0.0.0.0:9000 with auto-reload.
 # Bound to all interfaces so it can be reached from Docker / other hosts
