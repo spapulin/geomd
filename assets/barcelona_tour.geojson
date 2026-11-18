@@ -18,6 +18,23 @@
                 "id": "1",
                 "author": "Adam Smith",
                 "overview": "Park Güell is a public park system composed of gardens and architectural elements located on Carmel Hill",
+                "photos": [
+                    {
+                        "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Parc_guell_-_panoramio.jpg/1280px-Parc_guell_-_panoramio.jpg",
+                        "title": "The two buildings at the entrance of the park | essetefano",
+                        "alt": "The two buildings at the entrance of the park"
+                    },
+                    {
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/GuellTerraceSeparate.jpg",
+                        "title": "An uninterrupted view of the Terrace at Park Güell, designed by Antoni Gaudí | Walter.Horvath",
+                        "alt": "An uninterrupted view of the Terrace at Park Güell, designed by Antoni Gaudí"
+                    },
+                    {
+                        "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Parc_G%C3%BCell_viaduct.jpg/1280px-Parc_G%C3%BCell_viaduct.jpg",
+                        "title": "Viaduct designed for carriage transport | AxaxaxaxMlö",
+                        "alt": "Viaduct designed for carriage transport"
+                    }
+                ],
                 "address": "Carrer d'Olot, Barcelona, Spain",
                 "title": "Park Güell"
             }
