@@ -1,7 +1,9 @@
 import json
+import geojson
 
+from .. import GeometryBlock
 from ..helpers import parse_metadata_from_html_comment
-from ..models import Node, Heading, Paragraph, Text, List, Link, Image, ListItem, HtmlBlock
+from ..models import Node, Heading, Paragraph, Text, List, Link, Image, ListItem, HtmlBlock, CodeBlock
 from ..constants import _METADATA_KEY, _FIELD_MAPPING, _EXTRA_FIELDS
 
 
@@ -119,7 +121,7 @@ class JsonRenderer:
             i = j
         return result
 
-    def _render_section(self, nodes: list[Node]) -> list | str:
+    def _render_section(self, nodes: list[Node]) -> list | str | dict:
         """Render a section's content."""
         if len(nodes) == 1:
             node = nodes[0]
@@ -127,6 +129,10 @@ class JsonRenderer:
                 return self._render_list_block(node.children)
             elif isinstance(node, HtmlBlock):
                 return node.raw
+            elif isinstance(node, CodeBlock):
+                return self._render_code_block(node)
+            elif isinstance(node, GeometryBlock):
+                return self._render_geometry_block(node)
 
         # General case: paragraphs and inline lists joined by blank lines
         result: list[str] = []
@@ -201,3 +207,15 @@ class JsonRenderer:
             else:
                 result.append(self._render_paragraph(getattr(node, "children", [])))
         return "".join(result)
+
+    def _render_code_block(self, node: CodeBlock) -> dict:
+        return {
+            "language": node.language,
+            "code": node.raw
+        }
+
+    def _render_geometry_block(self, node: GeometryBlock) -> dict:
+        return {
+            "language": "geometry",
+            "code": f"```geometry\n{geojson.dumps(node.geometry)}\n```"
+        }
