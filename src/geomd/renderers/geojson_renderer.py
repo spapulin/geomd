@@ -35,24 +35,18 @@ class GeoJsonRenderer(JsonRenderer):
     ) -> tuple[list[geojson.Feature], dict]:
         """Recursively split data into Features (dicts with geometry) and extra properties."""
 
-        # TODO: Now we must define a geometry field in field_mapping of
-        #   markdown file. Perhaps it's better to automatically assign
-        #   "geometry" to field with GeometryBlock value within section
         # A dict containing "geometry" becomes one Feature,
         # everything else bubbles up
         if "geometry" in data:
-            geometry = data.pop("geometry")
-            # TODO: Include to _metadata default name for title or
-            #   disable it at all
-            # Note: We assign header value to _title as default property name,
-            # and include it in feature properties
-            data["title"] = title
-            # Note: Header name we assign to extra field of Feature
-            return [geojson.Feature(
-                geometry=geometry,
-                properties=data,
-                title=title
-            )], {}
+            return self._build_feature(data, "geometry", title)
+
+        # If the "geometry" property is not defined, search through
+        # the data items for a dict whose "language" field equals
+        # "geometry"
+        for key, value in data.items():
+            if isinstance(value, dict):
+                if value.get("language") == "geometry":
+                    return self._build_feature(data, key, title)
 
         extra: dict = {}
         features: list[geojson.Feature] = list()
@@ -74,24 +68,22 @@ class GeoJsonRenderer(JsonRenderer):
 
         return features, extra
 
-    def _render_section(self, nodes: list[Node]) -> list | dict | str:
-        """Render a section of nodes."""
+    def _build_feature(self, data, key, title):
+        geometry_block = data.pop(key)
+        # TODO: Include to _metadata default name for title or
+        #   disable it at all
+        # Note: We assign header value to "title" as default property name,
+        # and include it in feature properties
+        data["title"] = title
+        # Note: Header name we assign to extra field of Feature
+        return [geojson.Feature(
+            geometry=geometry_block["code"],
+            properties=data,
+            title=title
+        )], {}
 
-        # Fast path: a single List/GeometryBlock/HtmlBlock maps to a non-paragraph value
-        if len(nodes) == 1:
-            node = nodes[0]
-            if isinstance(node, List):
-                return self._render_list_block(nodes[0].children)
-            elif isinstance(node, GeometryBlock):
-                return node.geometry
-            elif isinstance(node, HtmlBlock):
-                return node.raw
-
-        # General path: render each supported node to a string, join with blank lines
-        result: list[str] = list()
-        for node in nodes:
-            if isinstance(node, List):
-                result.append(self._render_inline_list(node.children, ordered=node.ordered))
-            elif isinstance(node, Paragraph):
-                result.append(self._render_paragraph(node.children))
-        return "\n\n".join(result)
+    def _render_geometry_block(self, node: GeometryBlock) -> dict:
+        return {
+            "language": "geometry",
+            "code": node.geometry
+        }
