@@ -54,7 +54,7 @@ print(geojson_str)
 
 The quickest way to see `geomd` in action is the hosted demo:
 
-**[https://geomd.onrender.com/?url=https://raw.githubusercontent.com/spapulin/geomd/refs/heads/main/assets/barcelona_tour.geojson&src=geojson&dst=html](https://geomd.onrender.com/?url=https://raw.githubusercontent.com/spapulin/geomd/refs/heads/main/assets/barcelona_tour.geojson&src=geojson&dst=html&auto_contents=true)**
+**[https://geomd.onrender.com/?url=https://raw.githubusercontent.com/spapulin/geomd/refs/heads/main/assets/barcelona_tour.geojson&src=geojson&dst=html&auto_contents=true](https://geomd.onrender.com/?url=https://raw.githubusercontent.com/spapulin/geomd/refs/heads/main/assets/barcelona_tour.geojson&src=geojson&dst=html&auto_contents=true)**
 
 The service takes a GeoJSON file, reads it, and renders it back as HTML. The example above uses [`barcelona_tour.geojson`](https://raw.githubusercontent.com/spapulin/geomd/refs/heads/main/assets/barcelona_tour.geojson)
 
