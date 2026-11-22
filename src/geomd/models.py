@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import geojson
 
@@ -37,6 +37,17 @@ class Paragraph(Node):
 class Text(Node):
     NODE_TYPE = "text"
     raw: str = ""
+
+
+@dataclass
+class TextBlock(Node):
+    NODE_TYPE = "text_block"
+
+
+@dataclass
+class InlineFormat(Node):
+    NODE_TYPE = "inline_format"
+    kind: Literal["*", "**", "~~"] = "*"
 
 
 @dataclass

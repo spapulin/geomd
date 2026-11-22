@@ -59,8 +59,8 @@ class MarkdownRenderer:
         return f"```json\n{geojson.dumps(node.geometry)}\n```"
 
     def _render_list(
-            self, nodes:
-            list[Node],
+            self,
+            nodes: list[Node],
             ordered: bool = False,
             indent: int = 0
     ) -> str:
@@ -107,3 +107,17 @@ def to_link_anchor(header: str) -> str:
 
 def header_to_link(header: str) -> str:
     return f"[{header}](#{to_link_anchor(header)})"
+
+
+def heading_to_text(heading: Heading) -> str:
+    def node_to_text(node: Node):
+        result = []
+        if isinstance(node, Text):
+            return [node.raw.strip()]
+        elif len(node.children) > 0:
+            for child in node.children:
+                result.extend(node_to_text(child))
+        return result
+
+    text_list = node_to_text(heading)
+    return " ".join(text_list)

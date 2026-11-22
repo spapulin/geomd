@@ -7,7 +7,7 @@ from .parsers.geojson_parser import GeoJsonParser
 from .parsers.geomarkdown_parser import GeoMarkdownParser
 from .protocol import Parser, Renderer
 from .renderers.geomarkdown_renderer import GeoMarkdownRenderer
-from .renderers.html_renderer import GeoHTMLRenderer, ContentsInjectorPlugin
+from .renderers.html_renderer import GeoHTMLRenderer
 from .renderers.json_renderer import JsonRenderer
 from .renderers.markdown_renderer import MarkdownRenderer
 from .renderers.geojson_renderer import GeoJsonRenderer
@@ -56,19 +56,19 @@ def convert(
     to HTML. All other destinations are produced via geomd.
     """
 
-    if dst == "html":
-        if src in {"md", "geomd"}:
-            plugins = [ContentsInjectorPlugin()] if auto_contents else None
-            md_str = text
-        else:
-            plugins = [ContentsInjectorPlugin(only_heading_ids=True)] if auto_contents else None
-            md_str = render(
-                parse(text, src),
-                fmt="geomd",
-                auto_contents=auto_contents,
-                contents_title=contents_title
-            )
-        return create_markdown(renderer=GeoHTMLRenderer(), plugins=plugins)(md_str)
+    # if dst == "html":
+    #     if src in {"md", "geomd"}:
+    #         plugins = [ContentsInjectorPlugin()] if auto_contents else None
+    #         md_str = text
+    #     else:
+    #         plugins = [ContentsInjectorPlugin(only_heading_ids=True)] if auto_contents else None
+    #         md_str = render(
+    #             parse(text, src),
+    #             fmt="geomd",
+    #             auto_contents=auto_contents,
+    #             contents_title=contents_title
+    #         )
+    #     return create_markdown(renderer=GeoHTMLRenderer(), plugins=plugins)(md_str)
 
     return render(
         parse(text, src),

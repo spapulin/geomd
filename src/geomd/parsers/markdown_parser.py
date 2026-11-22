@@ -2,18 +2,20 @@ import logging
 
 import mistune
 
-from geomd.models import Node, Heading, Paragraph, Text, CodeBlock, Link, Image, List, ListItem, HtmlBlock
+from geomd.models import Node, Heading, Paragraph, Text, CodeBlock, Link, Image, List, ListItem, HtmlBlock, TextBlock, \
+    InlineFormat
 
 logger = logging.getLogger(__name__)
-
-_md = mistune.create_markdown(renderer=None)
 
 
 class MarkdownParser:
     """Convert a Markdown document into a flat list of document nodes."""
 
+    def __init__(self):
+        self._md = mistune.create_markdown(renderer=None)
+
     def parse(self, text: str) -> list[Node]:
-        ast, _ = _md.parse(text)
+        ast, _ = self._md.parse(text)
         nodes = []
         for node in ast:
             node = self._to_nodes(node)
@@ -29,12 +31,26 @@ class MarkdownParser:
                     level=node["attrs"]["level"],
                     children=self._get_children(node)
                 )
-            case "paragraph" | "block_text":
+            case "paragraph":
                 return Paragraph(
+                    children=self._get_children(node)
+                )
+            case "block_text":
+                return TextBlock(
                     children=self._get_children(node)
                 )
             case "text":
                 return Text(raw=node["raw"])
+            case "strong":
+                return InlineFormat(
+                    kind="**",
+                    children=self._get_children(node)
+                )
+            case "emphasis":
+                return InlineFormat(
+                    kind="*",
+                    children=self._get_children(node)
+                )
             case "block_code":
                 return CodeBlock(
                     language=node.get("attrs", {}).get("info", ""),
