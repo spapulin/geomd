@@ -85,6 +85,11 @@ class ListItem(Node):
 
 
 @dataclass
+class ImageList(Node):
+    NODE_TYPE = "image_list"
+
+
+@dataclass
 class HtmlBlock(Node):
     NODE_TYPE = "html_block"
     raw: str = ""

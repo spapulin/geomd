@@ -1,15 +1,15 @@
 import logging
+import re
+import textwrap
 import uuid
-from json import JSONDecodeError
-from typing import Any, Iterable
-from xml.etree import ElementTree
 
 from mistune import HTMLRenderer, Markdown, BlockState
 import geojson
 
 from .markdown_renderer import to_link_anchor, heading_to_text
 from .. import GeometryBlock, HtmlBlock
-from ..models import Node, Heading, Paragraph, TextBlock, Text, Image, InlineFormat, CodeBlock, List, ListItem, Link
+from ..models import Node, Heading, Paragraph, TextBlock, Text, Image, InlineFormat, CodeBlock, List, ListItem, Link, \
+    ImageList
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +111,8 @@ class GeoHTMLRenderer:
                 return self._convert_list(node)
             case ListItem():
                 return self._convert_list_item(node)
+            case ImageList():
+                return self._convert_image_list(node)
             case HtmlBlock():
                 return self._convert_html_block(node)
             case _:
@@ -193,6 +195,20 @@ class GeoHTMLRenderer:
             'children': [token for child in node.children if (token := self._convert_to_token(child))]
         }
 
+    def _convert_image_list(self, node: ImageList):
+        images = [
+            token
+            for list_item in node.children
+            for text_block in list_item.children
+            for image in text_block.children if (token := self._convert_to_token(image))
+        ]
+        return {
+            'type': 'image_list',
+            'attrs': {
+                'images': images
+            }
+        }
+
     def _convert_html_block(self, node: HtmlBlock):
         return {
             'type': 'block_html',
@@ -201,7 +217,7 @@ class GeoHTMLRenderer:
 
     class _Renderer(HTMLRenderer):
 
-        HTML_TEMPLATE = """\
+        HTML_TEMPLATE = textwrap.dedent("""\
         <!doctype html>
         <html>
         <head>
@@ -220,11 +236,12 @@ class GeoHTMLRenderer:
         <body>
             <div class="md-content">{body}</div>
         </body>
-        </html>"""
+        </html>""")
 
         def __init__(self):
             super().__init__()
-            self.register("geometry", self.geometry_block)
+            self.register("geometry", self.render_geometry_block)
+            self.register("image_list", self.render_image_list)
 
         def __call__(self, tokens, state):
             body = super().__call__(tokens, state)
@@ -235,12 +252,25 @@ class GeoHTMLRenderer:
                 return super().block_html(raw)
             return raw
 
-        def geometry_block(self, renderer, raw: str) -> str:
+        def render_image_list(self, renderer, images) -> str:
+            image_link_tags = []
+            for image in images:
+                image_tag = self.image(
+                    text=image["children"][0]["raw"],
+                    url=image["attrs"]["url"],
+                    title=image["attrs"]["title"]
+                )
+                image_link = f'<li><a href="{image["attrs"]["url"]}" target="_blank" rel="noopener noreferrer">{image_tag}</a></li>'
+                image_link_tags.append(image_link)
+
+            return f'<ul class="image-list">{"".join(image_link_tags)}</ul>'
+
+        def render_geometry_block(self, renderer, raw: str) -> str:
 
             # Unique id for each map on one page
             map_id = f'geo-map-{uuid.uuid4()}'
 
-            return f'''
+            html = f'''
                 <div id="{map_id}" class="geo-map" style="height:400px;width:100%"></div>
                 <script>
                 (function() {{
@@ -267,3 +297,4 @@ class GeoHTMLRenderer:
                 }})();
                 </script>
             '''
+            return re.sub(r'\s+', ' ', html).strip()

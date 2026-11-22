@@ -3,7 +3,7 @@ import logging
 import mistune
 
 from geomd.models import Node, Heading, Paragraph, Text, CodeBlock, Link, Image, List, ListItem, HtmlBlock, TextBlock, \
-    InlineFormat
+    InlineFormat, ImageList
 
 logger = logging.getLogger(__name__)
 
@@ -76,10 +76,15 @@ class MarkdownParser:
                     title=title
                 )
             case "list":
-                return List(
-                    ordered=node["bullet"] != "-",
-                    children=self._get_children(node)
-                )
+                if self._is_image_list(node):
+                    return ImageList(
+                        children=self._get_children(node)
+                    )
+                else:
+                    return List(
+                        ordered=node["bullet"] != "-",
+                        children=self._get_children(node)
+                    )
             case "list_item":
                 return ListItem(
                     children=self._get_children(node)
@@ -92,6 +97,30 @@ class MarkdownParser:
                 # raise ValueError(f"unhandled token: {node_type}")
                 logger.error(f"Unhandled token: {node_type}")
                 return None
+
+
+    def _is_image_list(self, token):
+        items = token.get("children", [])
+        if not items:
+            return False
+
+        for item in items:
+            if item.get("type") != "list_item":
+                return False
+            blocks = item.get("children", []) or []
+            if not blocks:
+                return False
+            for block in blocks:
+                if block.get("type") != "block_text":
+                    return False
+
+                if (not block.get("children", [])
+                        or len(block["children"]) != 1
+                        or block["children"][0].get("type") != "image"
+                ):
+                    return False
+
+        return True
 
     def _get_children(self, node: dict) -> list[Node]:
         children = []

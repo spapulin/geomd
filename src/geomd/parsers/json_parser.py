@@ -1,8 +1,7 @@
 import json
 import logging
 
-from geomd.models import Node, Heading, Text, Paragraph, Image, Link, ListItem, List
-
+from ..models import Node, Heading, Text, Paragraph, Image, Link, ListItem, List, ImageList, TextBlock
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +31,17 @@ class JsonParser:
 
     def _to_list_node(self, items: list) -> Node:
         list_nodes: list[ListItem] = []
+        is_image_list = True
         for item in items:
             node = self._to_resource_node(item)
             if node is not None:
-                list_nodes.append(ListItem(children=[node]))
-        return List(children=list_nodes)
+                if not isinstance(node, Image):
+                    is_image_list = False
+                list_nodes.append(ListItem(children=[TextBlock(children=[node])]))
+            else:
+                is_image_list = False
+
+        return List(children=list_nodes) if not is_image_list else ImageList(children=list_nodes)
 
     def _to_resource_node(self, item: str | dict) -> Node | None:
         if not isinstance(item, dict):

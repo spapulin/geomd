@@ -1,7 +1,7 @@
 import geojson
 
-from geomd.models import Node, Heading, Paragraph, CodeBlock, Text, Link, Image, List, ListItem, GeometryBlock, \
-    HtmlBlock
+from ..models import Node, Heading, Paragraph, CodeBlock, Text, Link, Image, List, ListItem, GeometryBlock, \
+    HtmlBlock, ImageList, TextBlock
 
 
 class MarkdownRenderer:
@@ -40,6 +40,10 @@ class MarkdownRenderer:
                 blocks.append(self._render_inline(node.children))
             elif isinstance(node, List):
                 blocks.append(self._render_list(node.children, ordered=node.ordered))
+            elif isinstance(node, TextBlock):
+                blocks.append(self._render_text_block(node))
+            elif isinstance(node, ImageList):
+                blocks.append(self._render_image_list(node.children))
             elif isinstance(node, CodeBlock):
                 language = node.language or ""
                 blocks.append(f"```{language}\n{node.raw}\n```")
@@ -69,8 +73,14 @@ class MarkdownRenderer:
         pad = " " * indent
 
         for i, item in enumerate(nodes):
+            if (len(item.children) != 1
+                    or not isinstance(item, ListItem)
+                    or not isinstance(item.children[0], TextBlock)
+            ):
+                continue
             marker = f"{i + 1}. " if ordered else "- "
-            body = self._render_inline(item.children).strip()
+            text_block: TextBlock = item.children[0]
+            body = self._render_text_block(text_block).strip()
             body_lines = body.splitlines() or [""]
 
             # First line carries the marker; continuation lines are indented
@@ -81,6 +91,9 @@ class MarkdownRenderer:
                 lines.append(pad + continuation + line)
 
         return "\n".join(lines)
+
+    def _render_image_list(self, nodes: list[Node]) -> str:
+        return self._render_list(nodes, ordered=False, indent=0)
 
     def _render_inline(self, nodes: list[Node]) -> str:
         """Flatten inline nodes (Text/Link/Image) to a single string."""
@@ -99,6 +112,9 @@ class MarkdownRenderer:
             else:
                 raise ValueError(f"No such inline node: {node.NODE_TYPE}")
         return "".join(result)
+
+    def _render_text_block(self, node: TextBlock) -> str:
+        return self._render_inline(node.children)
 
 
 def to_link_anchor(header: str) -> str:
