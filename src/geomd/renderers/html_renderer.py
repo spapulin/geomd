@@ -9,7 +9,7 @@ import geojson
 from .markdown_renderer import to_link_anchor, heading_to_text
 from .. import GeometryBlock, HtmlBlock
 from ..models import Node, Heading, Paragraph, TextBlock, Text, Image, InlineFormat, CodeBlock, List, ListItem, Link, \
-    ImageList
+    ImageList, MetadataBlock
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +115,8 @@ class GeoHTMLRenderer:
                 return self._convert_image_list(node)
             case HtmlBlock():
                 return self._convert_html_block(node)
+            case MetadataBlock():
+                return self._convert_metadata_block(node)
             case _:
                 logger.error(f"Unhandled node: {node}")
                 return None
@@ -215,6 +217,12 @@ class GeoHTMLRenderer:
             'raw': node.raw
         }
 
+    def _convert_metadata_block(self, node: MetadataBlock):
+        return {
+            'type': 'block_metadata',
+            'raw': node.raw
+        }
+
     class _Renderer(HTMLRenderer):
 
         HTML_TEMPLATE = textwrap.dedent("""\
@@ -242,14 +250,13 @@ class GeoHTMLRenderer:
             super().__init__()
             self.register("geometry", self.render_geometry_block)
             self.register("image_list", self.render_image_list)
+            self.register("block_metadata", self.render_metadata_block)
 
         def __call__(self, tokens, state):
             body = super().__call__(tokens, state)
             return self.HTML_TEMPLATE.format(body=body)
 
-        def block_html(self, raw: str):
-            if not raw.startswith("<!--"):
-                return super().block_html(raw)
+        def render_metadata_block(self, renderer, raw: str):
             return raw
 
         def render_image_list(self, renderer, images) -> str:

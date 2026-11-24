@@ -2,8 +2,10 @@ import logging
 
 import mistune
 
-from geomd.models import Node, Heading, Paragraph, Text, CodeBlock, Link, Image, List, ListItem, HtmlBlock, TextBlock, \
-    InlineFormat, ImageList
+from ..models import Node, Heading, Paragraph, Text, CodeBlock, Link, Image, List, ListItem, HtmlBlock, TextBlock, \
+    InlineFormat, ImageList, MetadataBlock
+from ..constants import _EXTRA_FIELDS, _FIELD_MAPPING
+
 
 logger = logging.getLogger(__name__)
 
@@ -90,14 +92,16 @@ class MarkdownParser:
                     children=self._get_children(node)
                 )
             case "block_html":
-                return HtmlBlock(raw=node.get("raw"))
+                if not self._is_metadata_block(node):
+                    return HtmlBlock(raw=node.get("raw"))
+                else:
+                    return MetadataBlock(raw=node.get("raw"))
             case "blank_line":
                 return None
             case _:
                 # raise ValueError(f"unhandled token: {node_type}")
                 logger.error(f"Unhandled token: {node_type}")
                 return None
-
 
     def _is_image_list(self, token):
         items = token.get("children", [])
@@ -121,6 +125,44 @@ class MarkdownParser:
                     return False
 
         return True
+
+    def _is_metadata_block(self, token):
+        text = token.get("raw")
+        cleaned: str = text.strip()
+        if not cleaned:
+            return False
+
+        if not (cleaned.startswith("<!--") and cleaned.endswith("-->")):
+            return False
+
+        body = cleaned[4:-3]
+
+        has_metadata_keys = False
+        has_properties = False
+
+        field_names = {f"{_FIELD_MAPPING}:", f"{_EXTRA_FIELDS}:"}
+
+        for raw_line in body.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            if line in field_names:
+                has_metadata_keys = True
+                # Reset so each header must have properties
+                has_properties = False
+                continue
+
+            # Reject properties before a header
+            if not has_metadata_keys:
+                return False
+
+            if not line.startswith("- ") or not ":" in line:
+                return False
+
+            has_properties = True
+
+        return has_metadata_keys and has_properties
 
     def _get_children(self, node: dict) -> list[Node]:
         children = []

@@ -1,7 +1,7 @@
 import geojson
 
 from ..models import Node, Heading, Paragraph, CodeBlock, Text, Link, Image, List, ListItem, GeometryBlock, \
-    HtmlBlock, ImageList, TextBlock
+    HtmlBlock, ImageList, TextBlock, MetadataBlock
 
 
 class MarkdownRenderer:
@@ -48,7 +48,9 @@ class MarkdownRenderer:
                 language = node.language or ""
                 blocks.append(f"```{language}\n{node.raw}\n```")
             elif isinstance(node, HtmlBlock):
-                blocks.append(f"{node.raw}")
+                blocks.append(node.raw)
+            elif isinstance(node, MetadataBlock):
+                blocks.append(node.raw)
             elif isinstance(node, GeometryBlock):
                 blocks.append(self._render_geometry_block(node))
             else:

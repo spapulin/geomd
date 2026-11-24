@@ -4,7 +4,7 @@ import geojson
 
 from ..parsers.json_parser import JsonParser
 from ..helpers import render_metadata_as_html_comment
-from ..models import Node, Heading, Text, Paragraph, GeometryBlock, HtmlBlock
+from ..models import Node, Heading, Text, Paragraph, GeometryBlock, MetadataBlock
 from ..constants import _METADATA_KEY, _EXTRA_FIELDS, _FIELD_MAPPING
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class GeoJsonParser(JsonParser):
                 nodes.append(Paragraph(children=[Text(raw=str(value))]))
 
         if metadata:
-            nodes.insert(0, HtmlBlock(
+            nodes.insert(0, MetadataBlock(
                 raw=render_metadata_as_html_comment({
                     _EXTRA_FIELDS: extra_fields,
                     _FIELD_MAPPING: {v: k for k, v in field_mapping.items()}

@@ -101,6 +101,12 @@ class GeometryBlock(Node):
     geometry: geojson.GeoJSON | None = None
 
 
+@dataclass
+class MetadataBlock(Node):
+    NODE_TYPE = "metadata_block"
+    raw: str = ""
+
+
 # def from_dict(d: dict) -> Node:
 #
 #     node_type: str = d["type"]

@@ -3,7 +3,7 @@ import geojson
 
 from .. import GeometryBlock
 from ..helpers import parse_metadata_from_html_comment
-from ..models import Node, Heading, Paragraph, Text, List, Link, Image, ListItem, HtmlBlock, CodeBlock
+from ..models import Node, Heading, Paragraph, Text, List, Link, Image, ListItem, HtmlBlock, CodeBlock, MetadataBlock
 from ..constants import _METADATA_KEY, _FIELD_MAPPING, _EXTRA_FIELDS
 
 
@@ -99,7 +99,7 @@ class JsonRenderer:
             # (only when it's not the entire section. Otherwise, it's the content)
             if len(section) > 1:
                 first_section_node = section[0]
-                if isinstance(first_section_node, HtmlBlock):
+                if isinstance(first_section_node, MetadataBlock):
                     section_value[_METADATA_KEY] = parse_metadata_from_html_comment(first_section_node.raw)
                     section = section[1:]
 
