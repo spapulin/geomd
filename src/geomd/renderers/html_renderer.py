@@ -145,7 +145,7 @@ class GeoHTMLRenderer:
         return {
             'type': 'image',
             'children': [{'type': 'text', 'raw': node.title}],
-            'attrs': {'url': node.url, 'title': " | ".join([node.title, node.alt])}
+            'attrs': {'url': node.url, 'title': node.title, 'alt': node.alt}
         }
 
     def _convert_link(self, node: Link):
