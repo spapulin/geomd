@@ -1,5 +1,6 @@
 .PHONY: test smoke lint fmt jupyter api mcp mcp-inspector
 
+# Run all tests
 test:
 	uv run pytest -v
 

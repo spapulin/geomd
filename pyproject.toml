@@ -1,6 +1,6 @@
 [project]
 name = "geomd"
-version = "0.1.0"
+version = "0.2.0"
 description = "GeoMarkdown is a Markdown dialect for geodata. This package provides parsers and renderers that convert between GeoMarkdown and GeoJSON"
 readme = "README.md"
 authors = [
@@ -25,7 +25,7 @@ geomd = "geomd:main"
 [project.urls]
 Homepage = "https://github.com/spapulin/geomd"
 Repository = "https://github.com/spapulin/geomd"
-Issues = "https://github.com/spapulin/fetta/geomd"
+Issues = "https://github.com/spapulin/geomd/issues"
 
 [build-system]
 requires = ["uv_build>=0.12.17,<0.13.0"]
