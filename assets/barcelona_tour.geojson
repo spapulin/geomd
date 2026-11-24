@@ -8,6 +8,7 @@
             "_metadata": {
                 "field_mapping": {
                     "overview": "Overview",
+                    "photos": "Photos",
                     "address": "Address",
                     "geometry": "On map"
                 },
